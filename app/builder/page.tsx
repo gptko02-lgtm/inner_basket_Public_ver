@@ -6,6 +6,9 @@ import { Category, ContentItem, CurriculumPart } from '@/lib/data';
 import CurriculumEditor from '@/components/CurriculumEditor';
 import ContentLibrary from '@/components/ContentLibrary';
 
+// Force dynamic rendering to avoid static generation with useSearchParams
+export const dynamic = 'force-dynamic';
+
 function BuilderContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
