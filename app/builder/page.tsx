@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Category, ContentItem, CurriculumPart } from '@/lib/data';
 import CurriculumEditor from '@/components/CurriculumEditor';
 import ContentLibrary from '@/components/ContentLibrary';
 
-export default function BuilderPage() {
+function BuilderContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const editId = searchParams.get('id');
@@ -307,5 +307,17 @@ export default function BuilderPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function BuilderPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-primary text-xl">로딩 중...</div>
+            </div>
+        }>
+            <BuilderContent />
+        </Suspense>
     );
 }
