@@ -217,15 +217,7 @@ export default function DashboardPage() {
         }
     };
 
-    const handleLogout = async () => {
-        try {
-            await fetch('/api/auth/logout', { method: 'POST' });
-            router.push('/login');
-            router.refresh();
-        } catch (error) {
-            console.error('로그아웃 실패:', error);
-        }
-    };
+
 
     if (isLoading) {
         return (
@@ -262,12 +254,6 @@ export default function DashboardPage() {
                             className="px-6 py-2.5 rounded-xl bg-[#00A9BB] hover:bg-[#008796] text-white font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
                         >
                             + 새 커리큘럼
-                        </button>
-                        <button
-                            onClick={handleLogout}
-                            className="px-6 py-2.5 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition-all duration-200"
-                        >
-                            로그아웃
                         </button>
                     </div>
                 </div>
