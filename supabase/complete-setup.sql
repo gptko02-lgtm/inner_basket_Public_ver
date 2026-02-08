@@ -1,29 +1,70 @@
 -- ========================================
--- 기존 데이터 정리 및 샘플 데이터 생성
+-- 완전한 데이터베이스 설정 및 샘플 데이터
 -- ========================================
--- DELETE 사용 버전 (TRUNCATE 권한 문제 해결)
+-- 1. 누락된 테이블 생성
+-- 2. 기존 데이터 정리
+-- 3. 샘플 데이터 입력
 
 -- ========================================
--- 1단계: 기존 데이터 모두 삭제
+-- STEP 1: 누락된 테이블 생성
 -- ========================================
--- CASCADE 순서대로 삭제
+
+-- curriculum_items 테이블 생성
+CREATE TABLE IF NOT EXISTS curriculum_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    curriculum_id UUID NOT NULL REFERENCES curriculums(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    learning_objectives TEXT,
+    duration INTEGER NOT NULL,
+    category_id TEXT NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+    items JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- content_library 테이블 생성
+CREATE TABLE IF NOT EXISTS content_library (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    content TEXT,
+    duration_minutes INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 인덱스 생성
+CREATE INDEX IF NOT EXISTS idx_curriculum_items_curriculum_id ON curriculum_items(curriculum_id);
+CREATE INDEX IF NOT EXISTS idx_curriculum_items_category_id ON curriculum_items(category_id);
+
+-- RLS 비활성화
+ALTER TABLE curriculum_items DISABLE ROW LEVEL SECURITY;
+ALTER TABLE content_library DISABLE ROW LEVEL SECURITY;
+
+-- ========================================
+-- STEP 2: 기존 데이터 정리
+-- ========================================
 DELETE FROM curriculum_items;
 DELETE FROM curriculums;
 DELETE FROM content_library;
-DELETE FROM categories;
+DELETE FROM categories WHERE parent_id IS NOT NULL OR id IN (
+    '11111111-1111-1111-1111-111111111111',
+    '22222222-2222-2222-2222-222222222222',
+    '33333333-3333-3333-3333-333333333333',
+    '44444444-4444-4444-4444-444444444444',
+    '55555555-5555-5555-5555-555555555555'
+);
 
 -- ========================================
--- 2단계: 5개 카테고리 생성
+-- STEP 3: 5개 카테고리 생성
 -- ========================================
 INSERT INTO categories (id, name, parent_id) VALUES
     ('11111111-1111-1111-1111-111111111111', 'AI 기초', NULL),
     ('22222222-2222-2222-2222-222222222222', '데이터 분석', NULL),
     ('33333333-3333-3333-3333-333333333333', '프로그래밍', NULL),
     ('44444444-4444-4444-4444-444444444444', '디지털 마케팅', NULL),
-    ('55555555-5555-5555-5555-555555555555', '비즈니스 전략', NULL);
+    ('55555555-5555-5555-5555-555555555555', '비즈니스 전략', NULL)
+ON CONFLICT (id) DO NOTHING;
 
 -- ========================================
--- 3단계: 콘텐츠 라이브러리 항목 생성
+-- STEP 4: 콘텐츠 라이브러리 항목 생성
 -- ========================================
 INSERT INTO content_library (title, content, duration_minutes) VALUES
 -- AI 관련
@@ -62,7 +103,7 @@ INSERT INTO content_library (title, content, duration_minutes) VALUES
 ('협상 전략과 기법', '비즈니스 협상의 전략과 실무 기법을 학습합니다', 40);
 
 -- ========================================
--- 4단계: 5개 커리큘럼 생성
+-- STEP 5: 5개 커리큘럼 생성
 -- ========================================
 
 -- 커리큘럼 1: AI 기초 과정
@@ -70,7 +111,7 @@ DO $$
 DECLARE
     v_curriculum_id UUID := gen_random_uuid();
 BEGIN
-    INSERT INTO curriculums (id, title, duration, category_id)
+    INSERT INTO curriculums (id, title, duration_minutes, category_id)
     VALUES (v_curriculum_id, '비전공자를 위한 AI 기초 완성', 185, '11111111-1111-1111-1111-111111111111');
 
     INSERT INTO curriculum_items (curriculum_id, title, learning_objectives, duration, category_id, items)
@@ -108,7 +149,7 @@ DO $$
 DECLARE
     v_curriculum_id UUID := gen_random_uuid();
 BEGIN
-    INSERT INTO curriculums (id, title, duration, category_id)
+    INSERT INTO curriculums (id, title, duration_minutes, category_id)
     VALUES (v_curriculum_id, '실무 데이터 분석 마스터', 190, '22222222-2222-2222-2222-222222222222');
 
     INSERT INTO curriculum_items (curriculum_id, title, learning_objectives, duration, category_id, items)
@@ -146,7 +187,7 @@ DO $$
 DECLARE
     v_curriculum_id UUID := gen_random_uuid();
 BEGIN
-    INSERT INTO curriculums (id, title, duration, category_id)
+    INSERT INTO curriculums (id, title, duration_minutes, category_id)
     VALUES (v_curriculum_id, 'Python으로 시작하는 프로그래밍', 180, '33333333-3333-3333-3333-333333333333');
 
     INSERT INTO curriculum_items (curriculum_id, title, learning_objectives, duration, category_id, items)
@@ -184,7 +225,7 @@ DO $$
 DECLARE
     v_curriculum_id UUID := gen_random_uuid();
 BEGIN
-    INSERT INTO curriculums (id, title, duration, category_id)
+    INSERT INTO curriculums (id, title, duration_minutes, category_id)
     VALUES (v_curriculum_id, '성과를 만드는 디지털 마케팅', 165, '44444444-4444-4444-4444-444444444444');
 
     INSERT INTO curriculum_items (curriculum_id, title, learning_objectives, duration, category_id, items)
@@ -222,7 +263,7 @@ DO $$
 DECLARE
     v_curriculum_id UUID := gen_random_uuid();
 BEGIN
-    INSERT INTO curriculums (id, title, duration, category_id)
+    INSERT INTO curriculums (id, title, duration_minutes, category_id)
     VALUES (v_curriculum_id, '스타트업 창업 실전 가이드', 170, '55555555-5555-5555-5555-555555555555');
 
     INSERT INTO curriculum_items (curriculum_id, title, learning_objectives, duration, category_id, items)
@@ -261,7 +302,8 @@ END $$;
 DO $$
 BEGIN
     RAISE NOTICE '========================================';
-    RAISE NOTICE '샘플 데이터 생성 완료!';
+    RAISE NOTICE '데이터베이스 설정 완료!';
+    RAISE NOTICE '- 테이블 생성: curriculum_items, content_library';
     RAISE NOTICE '- 카테고리: 5개';
     RAISE NOTICE '- 커리큘럼: 5개';
     RAISE NOTICE '- 콘텐츠 라이브러리: 25개';
